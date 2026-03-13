@@ -1,12 +1,29 @@
 # Image Gen MCP
 
-A FastMCP stdio server that generates and edits images using the Google Gemini image model.
+A FastMCP HTTP server that generates and edits images using the Google Gemini image model.
+
+## Screenshots
+
+**Generating an image** — Claude calls `generate_image` and the result renders inline:
+
+![Claude Desktop generating a nature image](docs/claude_desktop_generating_an_image.png)
+
+**Editing an image** — following up with `edit_image` to reformat for Instagram:
+
+![Claude Desktop editing the image for Instagram](docs/claud_desktop_editing_image.png)
 
 ## Files
 
-| File | Purpose |
+| File / Directory | Purpose |
 |---|---|
-| `image_gen_mcp.py` | The MCP server |
+| `image_gen_mcp/` | The MCP server package |
+| `image_gen_mcp/config.py` | Environment variable configuration and validation |
+| `image_gen_mcp/types.py` | `AspectRatio` and `Resolution` type aliases |
+| `image_gen_mcp/ui.py` | Prefab UI CSP patching for inline image rendering |
+| `image_gen_mcp/client.py` | Google GenAI client initialization |
+| `image_gen_mcp/image_utils.py` | Image loading, saving, and result-collection helpers |
+| `image_gen_mcp/tools.py` | MCP tool definitions (`generate_image`, `edit_image`) |
+| `image_gen_mcp/server.py` | Transport entry point (stdio / HTTP) |
 | `pyproject.toml` | Package metadata and entry point |
 | `requirements.txt` | Python dependencies |
 
@@ -59,7 +76,11 @@ pip install -r requirements.txt
 | `GOOGLE_VERTEX_LOCATION` | No | `global` | Vertex AI location; only used when authenticating via service account |
 | `IMAGE_OUTPUT_DIR` | No | `./images` | Directory where generated/edited images are saved |
 | `IMAGE_MODEL` | No | `gemini-3.1-flash-image-preview` | Gemini model to use for image generation |
-| `RETURN_FILEPATH` | No | — | Set to `1` or `true` to return file paths instead of inline image content |
+| `HOST` | No | `0.0.0.0` | Bind address for the HTTP server |
+| `PORT` | No | `56789` | Listen port for the HTTP server |
+| `MCP_TRANSPORT` | No | `http` | Default transport when `--transport` flag is absent: `stdio` or `http` |
+| `BASE_URL` | No | `http://localhost:{PORT}` | Public base URL used to construct image URLs returned to the LLM |
+| `MCP_PATH` | No | `/mcp` | Mount path for the MCP endpoint |
 
 Either `GEMINI_API_KEY` or `GOOGLE_SERVICE_ACCOUNT_FILE` must be set; the server will raise an error on startup if neither is present.
 
@@ -79,31 +100,55 @@ export GOOGLE_VERTEX_LOCATION=us-central1      # optional, defaults to global
 
 ### 4. Run the server
 
-If installed as a package:
+**stdio transport** (default — for MCP hosts that manage the process):
 
 ```bash
-image-gen-mcp
+image-gen-mcp --transport stdio
 ```
 
-Or directly:
+**HTTP transport** (for persistent or remote MCP hosts):
 
 ```bash
-python image_gen_mcp.py
+image-gen-mcp --transport http
+```
+
+Or using the Python module directly:
+
+```bash
+python -m image_gen_mcp --transport stdio
+python -m image_gen_mcp --transport http
 ```
 
 ## Register with an MCP host
 
-Add the following to your MCP host config (e.g. Claude Desktop `config.json`):
+The server supports two transports. Choose the one your MCP host requires.
+
+**HTTP transport** — add to your MCP host config (e.g. Claude Desktop `config.json`):
 
 ```json
 {
   "mcpServers": {
     "image-gen-mcp": {
+      "type": "http",
+      "url": "http://localhost:56789/mcp"
+    }
+  }
+}
+```
+
+Adjust `url` if you changed `HOST`, `PORT`, or `MCP_PATH`.
+
+**stdio transport** — add to your MCP host config:
+
+```json
+{
+  "mcpServers": {
+    "image-gen-mcp": {
+      "type": "stdio",
       "command": "image-gen-mcp",
+      "args": ["--transport", "stdio"],
       "env": {
-        "GEMINI_API_KEY": "your_api_key_here",
-        "GOOGLE_SERVICE_ACCOUNT_FILE": "/path/to/service_account_key.json",
-        "IMAGE_OUTPUT_DIR": "/path/to/your/images"
+        "GEMINI_API_KEY": "your_api_key_here"
       }
     }
   }
@@ -149,5 +194,7 @@ Edit one or more existing images using a text prompt.
 
 - Images are saved as PNG with a timestamp suffix, e.g. `generated_20260307_143022.png`.
 - The model defaults to `gemini-3.1-flash-image-preview`. Override it with the `IMAGE_MODEL` env variable.
-- When `RETURN_FILEPATH` is set, tools return the file path and a `resource_id` (e.g. `images://generated_20260307_143022`) that can be used to fetch the image via the MCP resource endpoint.
+- Each tool response includes an absolute `file_path` and a `url` pointing to the served image.
+- Generated images are served as static files at `{BASE_URL}/images/<filename>`.
+- A `/health` endpoint is available for liveness checks.
 - Multiple images passed to `edit_image` are composited or used as references within a single generation request.
