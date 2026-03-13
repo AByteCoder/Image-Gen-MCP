@@ -31,7 +31,13 @@ A FastMCP HTTP server that generates and edits images using the Google Gemini im
 
 ### 1. Install
 
-**As a package (recommended):**
+**From GitHub (recommended):**
+
+```bash
+pip install git+https://github.com/AByteCoder/Image-Gen-MCP.git
+```
+
+**From a local clone:**
 
 ```bash
 pip install /path/to/image-gen-mcp
