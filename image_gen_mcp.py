@@ -106,18 +106,17 @@ def _collect_results(parts, filename_prefix: str) -> list[types.ContentBlock]:
         if part.inline_data is not None:
             path = _save_pil(part.as_image(), filename_prefix)
             image_id = path.stem
+            results.append(
+                Image(
+                    path=str(path.resolve()),
+                    format="png",
+                )
+            )
             if RETURN_FILEPATH:
                 results.append(
                     types.TextContent(
                         type="text",
                         text=f"resource_id: images://{image_id}\nfile_path: {path.resolve()}",
-                    )
-                )
-            else:
-                results.append(
-                    Image(
-                        path=str(path.resolve()),
-                        format="png",
                     )
                 )
     return results

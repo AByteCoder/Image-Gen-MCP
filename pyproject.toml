@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "image-gen-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "Image Gen MCP — FastMCP stdio server for image generation and editing using Google Gemini"
 requires-python = ">=3.11"
 dependencies = [
