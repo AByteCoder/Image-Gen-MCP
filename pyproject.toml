@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "image-gen-mcp"
+version = "0.1.0"
+description = "Image Gen MCP — FastMCP stdio server for image generation and editing using Google Gemini"
+requires-python = ">=3.11"
+dependencies = [
+    "aiohttp~=3.13.3",
+    "fastmcp~=3.1.0",
+    "google-genai~=1.66.0",
+    "Pillow~=12.1.1",
+]
+
+[project.scripts]
+image-gen-mcp = "image_gen_mcp:main"
+
+[tool.hatch.build.targets.wheel]
+include = ["image_gen_mcp.py"]
