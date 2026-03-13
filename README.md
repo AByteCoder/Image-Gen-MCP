@@ -12,6 +12,21 @@ A FastMCP HTTP server that generates and edits images using the Google Gemini im
 
 ![Claude Desktop editing the image for Instagram](docs/claud_desktop_editing_image.png)
 
+## Table of Contents
+
+- [Files](#files)
+- [Setup](#setup)
+  - [1. Install](#1-install)
+  - [2. Obtain credentials](#2-obtain-credentials)
+  - [3. Set environment variables](#3-set-environment-variables)
+  - [4. Run the server](#4-run-the-server)
+- [Register with an MCP host](#register-with-an-mcp-host)
+- [Tools](#tools)
+  - [generate\_image](#generate_image)
+  - [edit\_image](#edit_image)
+  - [Aspect ratio values](#aspect-ratio-values)
+- [Notes](#notes)
+
 ## Files
 
 | File / Directory | Purpose |
